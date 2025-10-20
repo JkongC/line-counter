@@ -1,7 +1,12 @@
 #include <print>
 
-int main()
+#include "Argument.h"
+
+int main(int argc, char **argv)
 {
-    std::println("Hello World from std::println");
-    return 0;
+    ArgumentManager::process_arguments(argc, argv);
+    for (const auto& [item, arg] : ArgumentManager::get_storage())
+    {
+        std::println("Arg item: {}, Arg content: {}", item, arg);
+    }
 }
