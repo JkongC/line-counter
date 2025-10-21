@@ -3,8 +3,8 @@
 
 #include <expected>
 
-template<typename E, typename... Args>
-constexpr std::unexpected<E> make_unexpected(Args&&... args)
+template <typename E, typename... Args>
+constexpr std::unexpected<E> make_unexpected(Args &&...args)
 {
     return std::unexpected<E>(std::in_place, std::forward<Args>(args)...);
 }
@@ -21,17 +21,17 @@ constexpr std::unexpected<E> make_unexpected(Args&&... args)
     else                              \
         return std::unexpected(std::move(exp).error());
 
-#define UNWRAP_EXPECTED_FROM(rexp, dst)            \
+#define UNWRAP_EXPECTED_FROM(rexp, dst)                 \
     do                                                  \
     {                                                   \
-        auto __UnwrapMacroTempExpected = rexp;     \
+        auto __UnwrapMacroTempExpected = rexp;          \
         UNWRAP_EXPECTED(__UnwrapMacroTempExpected, dst) \
     } while (0)
 
-#define UNWRAP_MOV_EXPECTED_FROM(rexp, dst)            \
+#define UNWRAP_MOV_EXPECTED_FROM(rexp, dst)                 \
     do                                                      \
     {                                                       \
-        auto __UnwrapMacroTempExpected = rexp;         \
+        auto __UnwrapMacroTempExpected = rexp;              \
         UNWRAP_MOV_EXPECTED(__UnwrapMacroTempExpected, dst) \
     } while (0)
 

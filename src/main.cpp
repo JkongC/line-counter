@@ -12,7 +12,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    for (const auto& [item, arg] : ArgumentManager::get_storage())
+    for (const auto &[item, arg] : ArgumentManager::get_storage())
     {
         std::println("Arg item: {}, Arg content: {}", item, arg);
     }

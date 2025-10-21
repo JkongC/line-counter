@@ -2,8 +2,8 @@
 
 #include <print>
 
-template<typename... Args>
-void log_normal(std::format_string<Args...> fmt, Args&&... args)
+template <typename... Args>
+void log_normal(std::format_string<Args...> fmt, Args &&...args)
 {
     std::println(fmt, std::forward<Args>(args)...);
 }

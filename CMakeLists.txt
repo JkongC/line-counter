@@ -6,14 +6,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(line-counter)
 
-if (NOT CMAKE_BUILD_TYPE)
-set(CMAKE_BUILD_TYPE "Release")
-elseif (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Release"))
-message(WARNING "\"${CMAKE_BUILD_TYPE}\" is not accepted for build type. Will use Debug.")
-set(CMAKE_BUILD_TYPE "Debug")
+if(MSVC)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+else()
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}")
 endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}")
 
 add_executable(lcount src/main.cpp
     src/Argument.h
@@ -24,7 +21,7 @@ add_executable(lcount src/main.cpp
 
 target_include_directories(lcount PUBLIC "${PROJECT_SOURCE_DIR}/src")
 
-if (MSVC)
+if(MSVC)
     target_compile_options(lcount PRIVATE /W4)
 else()
     target_compile_options(lcount PRIVATE -Wall -Wextra -Wpedantic)

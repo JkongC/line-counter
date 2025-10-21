@@ -12,8 +12,8 @@ std::string_view InvalidArgument::info() const
     return std::string_view{m_Info.begin(), m_Info.end()};
 }
 
-template<typename... Args>
-constexpr std::unexpected<InvalidArgument> make_invalid_info(std::format_string<Args...> fmt, Args&&... args)
+template <typename... Args>
+constexpr std::unexpected<InvalidArgument> make_invalid_info(std::format_string<Args...> fmt, Args &&...args)
 {
     return make_unexpected<InvalidArgument>(fmt, std::forward<Args>(args)...);
 }

@@ -24,7 +24,7 @@ class InvalidArgument
 public:
     InvalidArgument(std::string info);
     InvalidArgument(InvalidArgument &&other) noexcept;
-    InvalidArgument(const InvalidArgument&) = default;
+    InvalidArgument(const InvalidArgument &) = default;
 
     template <typename... Args>
     InvalidArgument(std::format_string<Args...> fmt, Args &&...args)
