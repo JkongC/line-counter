@@ -2,21 +2,38 @@
 #define LC_ARGUMENT_H_
 
 #include <vector>
+#include <string>
 #include <string_view>
-#include <array>
+#include <format>
 #include <map>
-#include <exception>
+#include <expected>
+#include <optional>
 
 #include "utils/Array.hpp"
 
 inline constexpr auto argumentItems = make_array<std::string_view>(
-    "directory");
+    "directory",
+    "thread-count",
+    "count-all");
 
 using ArgumentItemIterType = decltype(argumentItems)::iterator;
 using ArgumentItemCIterType = decltype(argumentItems)::const_iterator;
 
-class InvalidArgument : std::exception
+class InvalidArgument
 {
+public:
+    InvalidArgument(std::string info);
+    InvalidArgument(InvalidArgument &&other) noexcept;
+    InvalidArgument(const InvalidArgument&) = default;
+
+    template <typename... Args>
+    InvalidArgument(std::format_string<Args...> fmt, Args &&...args)
+        : InvalidArgument(std::format(fmt, std::forward<Args>(args)...)) {}
+
+    std::string_view info() const;
+
+private:
+    std::string m_Info;
 };
 
 class ArgumentManager
@@ -26,8 +43,8 @@ public:
     using CIterType = StorageType::const_iterator;
     using RangeType = std::pair<CIterType, CIterType>;
 
-    static void process_arguments(int argc, char **argv);
-    static RangeType get_argument(std::string_view item);
+    static std::expected<void, InvalidArgument> process_arguments(int argc, char **argv);
+    static std::optional<RangeType> get_argument(std::string_view item);
     static const StorageType &get_storage();
 
 private:
