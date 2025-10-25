@@ -2,11 +2,28 @@
 
 #include <array>
 
-template <typename T, typename... SrcT>
-    requires(std::convertible_to<std::decay_t<SrcT>, T> && ...)
-inline constexpr auto make_array(SrcT &&...elements)
+template<typename T, typename... Args>
+consteval void _ConstructArray(Args&&... args)
 {
-    return std::array<T, sizeof...(elements)>{static_cast<std::decay_t<SrcT>>(elements)...};
+    T arr[]{args...};
+}
+
+template <typename T, typename... Args>
+concept CanConstructArray = requires {
+    _ConstructArray(std::declval<Args>()...);
+};
+
+template <typename T, std::convertible_to<T>... Ele>
+constexpr auto make_array(Ele &&...elements)
+{
+    if constexpr (CanConstructArray<T, Ele...>)
+    {
+        return std::array<T, sizeof...(Ele)>{elements...};
+    }
+    else
+    {
+        return std::array<T, sizeof...(Ele)>{static_cast<std::decay_t<Ele>>(elements)...};
+    }
 }
 
 #define LC_UTILS_ARRAY_HPP_

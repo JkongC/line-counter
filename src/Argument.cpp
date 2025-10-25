@@ -12,6 +12,26 @@ std::string_view InvalidArgument::info() const
     return std::string_view{m_Info.begin(), m_Info.end()};
 }
 
+bool ArgItemDefinition::match_full(const std::string_view& item) const
+{
+    return item == full_name;
+}
+
+bool ArgItemDefinition::match_short(const std::string_view &item) const
+{
+    return item == short_alias;
+}
+
+bool ArgItemDefinition::match(const std::string_view& item) const
+{
+    return match_short(item) || match_full(item);
+}
+
+bool ArgItemDefinition::operator==(const std::string_view& item) const
+{
+    return match(item);
+}
+
 template <typename... Args>
 constexpr std::unexpected<InvalidArgument> make_invalid_info(std::format_string<Args...> fmt, Args &&...args)
 {
@@ -20,9 +40,14 @@ constexpr std::unexpected<InvalidArgument> make_invalid_info(std::format_string<
 
 static std::expected<ArgumentItemCIterType, InvalidArgument> validate_arg_item(std::string_view &item, std::string_view prefix)
 {
-    size_t item_name_head = item.find_first_not_of(prefix);
+    size_t item_name_head = item.find_first_not_of("-");
     std::string_view item_name = item.substr(item_name_head, item.size() - item_name_head);
-    auto result = std::find(argumentItems.begin(), argumentItems.end(), item_name);
+    auto result = std::find_if(argumentItems.begin(), argumentItems.end(), [&](const ArgItemDefinition& def){
+        if (prefix == ArgItemDefinition::fullNamePrefix)
+            return item_name == def.full_name;
+        else
+            return item_name == def.short_alias;
+    });
     if (result == argumentItems.end())
     {
         return make_invalid_info("Argument item \"{}\" doesn't exist!", item_name);
@@ -30,7 +55,7 @@ static std::expected<ArgumentItemCIterType, InvalidArgument> validate_arg_item(s
     return result;
 }
 
-std::expected<void, InvalidArgument> ArgumentManager::process_arguments(int argc, char **argv)
+std::expected<void, InvalidArgument> ArgumentManager::collect_arguments(int argc, char **argv)
 {
     std::vector<std::string_view> m_RawArgs;
     m_RawArgs.reserve(argc);
@@ -43,36 +68,43 @@ std::expected<void, InvalidArgument> ArgumentManager::process_arguments(int argc
     ArgumentItemCIterType current_item = argumentItems.end();
     for (auto &raw : m_RawArgs)
     {
-        if (raw.starts_with("--"))
+        int prefix_flag = 0;
+        if (raw.starts_with(ArgItemDefinition::fullNamePrefix))
+            prefix_flag = 1;
+        else if (raw.starts_with(ArgItemDefinition::aliasPrefix))
+            prefix_flag = 2;
+
+        if (prefix_flag == 0)
         {
-            UNWRAP_MOV_EXPECTED_FROM(validate_arg_item(raw, "--"), current_item);
-            m_ArgStorage.emplace(*current_item, "");
-            current_item = argumentItems.end();
-            path_processed = true;
-        }
-        else if (raw.starts_with("-"))
-        {
-            UNWRAP_MOV_EXPECTED_FROM(validate_arg_item(raw, "-"), current_item);
-            path_processed = true;
-        }
-        else if (path_processed)
-        {
-            if (current_item == argumentItems.end())
+            if (path_processed)
             {
-                return make_invalid_info("Argument \"{}\" is not attached to any argument items!", raw);
+                if (current_item == argumentItems.end())
+                {
+                    return make_invalid_info("Argument \"{}\" is not attached to any argument items!", raw);
+                }
+                m_ArgStorage.emplace(current_item->full_name, raw);
             }
-            m_ArgStorage.emplace(*current_item, raw);
+            else
+            {
+                m_ArgStorage.emplace("work-directory", raw);
+                path_processed = true;
+            }
         }
         else
         {
-            m_ArgStorage.emplace("directory", raw);
+            UNWRAP_MOV_EXPECTED_FROM(validate_arg_item(raw, prefix_flag == 1 ? "--" : "-"), current_item);
             path_processed = true;
         }
     }
 
-    if (m_ArgStorage.find("directory") == m_ArgStorage.end())
+    if (current_item != argumentItems.end() && m_ArgStorage.find(current_item->full_name) == m_ArgStorage.end())
     {
-        m_ArgStorage.emplace("directory", ".");
+        m_ArgStorage.emplace(current_item->full_name, "");
+    }
+    
+    if (m_ArgStorage.find("work-directory") == m_ArgStorage.end())
+    {
+        m_ArgStorage.emplace("work-directory", ".");
     }
 
     return {};
@@ -86,4 +118,14 @@ std::optional<ArgumentManager::RangeType> ArgumentManager::get_argument(std::str
 const ArgumentManager::StorageType &ArgumentManager::get_storage()
 {
     return m_ArgStorage;
+}
+
+ArgumentManager::CIterType ArgumentManager::begin() const
+{
+    return m_ArgStorage.begin();
+}
+
+ArgumentManager::CIterType ArgumentManager::end() const
+{
+    return m_ArgStorage.end();
 }
