@@ -1,4 +1,6 @@
 #include <print>
+#include <filesystem>
+#include <istream>
 
 #include "Argument.h"
 #include "log/Logger.hpp"
@@ -9,7 +11,7 @@
         auto _Temp = result;                                          \
         if (!_Temp)                                                   \
         {                                                             \
-            log_normal("Argument invalid: {}", _Temp.error().info()); \
+            log_normal("Argument error: {}", _Temp.error().info()); \
             return -1;                                                \
         }                                                             \
     } while (0)
@@ -27,8 +29,8 @@ int main(int argc, char **argv)
     if (process_arguments(argc, argv) == -1)
         return 0;
 
-    for (const auto &[item, arg] : ArgumentManager::get_storage())
-    {
-        std::println("Arg item: {}, Arg content: {}", item, arg);
-    }
+    if (ArgumentManager::has_argument("multi-thread"))
+        log_normal("Multi-thread mode is on.");
+    if (ArgumentManager::has_argument("verbose"))
+        log_normal("Verbose mode is on.");
 }
