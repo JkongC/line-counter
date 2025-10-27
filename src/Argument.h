@@ -22,6 +22,15 @@ public:
     InvalidArgument(std::format_string<Args...> fmt, Args&&... args)
         : InvalidArgument(std::format(fmt, std::forward<Args>(args)...)) {}
 
+    template<typename Self>
+    decltype(auto) as_base(this Self&& self)
+    {
+        if constexpr (std::is_lvalue_reference_v<Self>)
+            return static_cast<InvalidArgument&>(self);
+        else
+            return static_cast<InvalidArgument&&>(self);
+    }
+
     std::string_view info() const;
 
 private:

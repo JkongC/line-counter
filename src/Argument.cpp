@@ -56,7 +56,7 @@ constexpr std::unexpected<InvalidArgument> make_invalid_info(std::format_string<
 template <typename... Args>
 constexpr std::unexpected<InvalidArgument> make_too_many_args_info(std::string_view item)
 {
-    return make_unexpected<InvalidArgument>(static_cast<InvalidArgument&&>(TooManyArguments{item}));
+    return make_unexpected<InvalidArgument>(TooManyArguments{item}.as_base());
 }
 
 using ArgumentItemIterType = decltype(std::begin(argumentItems));
